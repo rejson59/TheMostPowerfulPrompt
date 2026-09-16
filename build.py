@@ -16,6 +16,8 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent
 OUT = ROOT / "index.html"
 
+EVAL_TASKS = ROOT / "eval" / "tasks.json"
+
 SOURCES = [
     {"lang": "en", "label": "English", "file": ROOT / "prompt" / "EN.md"},
     {"lang": "pl", "label": "Polski", "file": ROOT / "prompt" / "PL.md"},
@@ -252,21 +254,73 @@ def extract_variants(raw: str) -> dict[str, str]:
     return variants
 
 
+def render_eval_table() -> tuple[str, dict]:
+    """Build the evaluation section HTML straight from eval/tasks.json."""
+    if not EVAL_TASKS.exists():
+        return "", {"tasks": 0, "cats": 0, "checks": 0}
+    data = json.loads(EVAL_TASKS.read_text(encoding="utf-8"))
+    tasks = data["tasks"]
+    cats: dict[str, list[dict]] = {}
+    for t in tasks:
+        cats.setdefault(t["category"], []).append(t)
+
+    rows = []
+    for cat in sorted(cats):
+        items = cats[cat]
+        rows.append(
+            f'<tr class="catrow"><td colspan="3">{html.escape(cat)} '
+            f'<span class="cnt">{len(items)}</span></td></tr>'
+        )
+        for t in items:
+            rows.append(
+                f'<tr><td class="tid"><code>{html.escape(t["id"])}</code></td>'
+                f'<td>{html.escape(t["probes"])}</td>'
+                f'<td class="num">{len(t["checks"])}</td></tr>'
+            )
+
+    table = (
+        '<div class="tablewrap"><table class="evaltable"><thead><tr>'
+        '<th>zadanie</th><th>co wykrywa</th><th class="num">checki</th>'
+        '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>'
+    )
+    stats = {
+        "tasks": len(tasks),
+        "cats": len(cats),
+        "checks": sum(len(t["checks"]) for t in tasks),
+    }
+    return table, stats
+
+
 def word_count(text: str) -> int:
     """Count words outside of code fences (a fairer measure of prose size)."""
     stripped = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
     return len(re.findall(r"\S+", stripped))
 
 
-def token_estimate(text: str) -> int:
-    # rough heuristic: ~4 chars/token for English prose, ~5.5 for Polish
-    return int(len(text) / 4.0)
+try:  # exact if the user has it and can reach the BPE download
+    import tiktoken
+
+    _ENC = tiktoken.get_encoding("cl100k_base")
+    TOKEN_MODE = "exact (tiktoken cl100k_base)"
+except Exception:  # ImportError, or the encoding file cannot be downloaded
+    _ENC = None
+    TOKEN_MODE = "estimated (heuristic; install tiktoken for exact counts)"
+
+# Chars-per-token differs by language: Polish inflects, so its words are longer
+# and it spends more tokens per character than English does.
+CHARS_PER_TOKEN = {"en": 4.0, "pl": 3.4}
+
+
+def token_estimate(text: str, lang: str = "en") -> int:
+    if _ENC is not None:
+        return len(_ENC.encode(text))
+    return int(len(text) / CHARS_PER_TOKEN.get(lang, 4.0))
 
 
 def build_doc(entry: dict) -> dict:
     raw = entry["file"].read_text(encoding="utf-8")
     # keep the size claim in the header honest and self-updating
-    raw = raw.replace("{{TOKENS}}", f"{token_estimate(raw):,}")
+    raw = raw.replace("{{TOKENS}}", f"{token_estimate(raw, entry['lang']):,}")
     body, toc = render_blocks(raw.splitlines())
     return {
         "lang": entry["lang"],
@@ -276,7 +330,7 @@ def build_doc(entry: dict) -> dict:
         "toc": toc,
         "words": word_count(raw),
         "chars": len(raw),
-        "tokens": token_estimate(raw),
+        "tokens": token_estimate(raw, entry["lang"]),
         "sectionText": extract_sections(raw),
         "variants": extract_variants(raw),
         "sections": len([t for t in toc if t["level"] == 2]),
@@ -301,6 +355,12 @@ def main() -> None:
         "@@EN_TOKENS@@": f"{docs[0]['tokens']:,}",
         "@@PL_WORDS@@": f"{docs[1]['words']:,}",
     }
+    eval_html, eval_stats = render_eval_table()
+    replacements["@@EVAL_TABLE@@"] = eval_html
+    replacements["@@EVAL_TASKS@@"] = str(eval_stats["tasks"])
+    replacements["@@EVAL_CATS@@"] = str(eval_stats["cats"])
+    replacements["@@EVAL_CHECKS@@"] = str(eval_stats["checks"])
+
     page = template
     for key, value in replacements.items():
         page = page.replace(key, value)
@@ -314,6 +374,7 @@ def main() -> None:
 
     OUT.write_text(page, encoding="utf-8")
     print(f"wrote {OUT} ({OUT.stat().st_size:,} bytes / {len(page):,} chars)")
+    print(f"token counting: {TOKEN_MODE}")
     for d in docs:
         print(
             f"  {d['lang']}: {d['words']:,} words | {d['chars']:,} chars | "

@@ -30,7 +30,11 @@ jest na małych modelach, bo tam startowy pułap jest najniższy.
 | `index.html` | Samodzielna strona (zero zależności, działa offline) z podglądem, wyszukiwarką, spisem treści i kopiowaniem per sekcja. |
 | `build.py` | Buduje `index.html` z `prompt/*.md`. Własny renderer markdowna, bez bibliotek. |
 | `template.html` | Szablon strony (CSS + JS). |
-| `test/page.test.mjs` | 57 asercji wykonywanych na prawdziwej stronie w jsdom. |
+| `test/page.test.mjs` | 66 asercji wykonywanych na prawdziwej stronie w jsdom. |
+| `eval/harness.py` | Ewaluator: 28 zadań, 65 deterministycznych sprawdzeń. Mierzy zachowanie modelu z promptem i bez. |
+| `eval/tasks.json` | Definicje zadań — każde celuje w jeden konkretny tryb awarii. |
+| `eval/fixtures/` | Odpowiedzi wzorcowe (powinny zaliczyć wszystko) i celowo złe (powinny oblać wszystko). |
+| `eval/test_harness.py` | 40 asercji: czy grader rozróżnia dobre od złych, czy failuje bezpiecznie, czy runner działa. |
 | `deploy/pages.yml.example` | Gotowy workflow GitHub Pages. **Nieaktywny tam, gdzie leży** — skopiuj go do `.github/workflows/pages.yml` we własnym klonie (szczegóły w nagłówku pliku). |
 
 ---
@@ -67,11 +71,31 @@ vim prompt/EN.md
 python3 build.py                # -> index.html
 ```
 
-**Chcesz uruchomić testy?**
+**Chcesz sprawdzić, czy to u Ciebie działa?** Nie wierz opisowi — zmierz.
+
+```bash
+OMNI_API_KEY=sk-... python3 eval/harness.py run \
+  --model twoj-model --variant none --out eval/results/baseline.json
+
+OMNI_API_KEY=sk-... python3 eval/harness.py run \
+  --model twoj-model --variant full --out eval/results/boosted.json
+
+python3 eval/harness.py compare \
+  --baseline eval/results/baseline.json --boosted eval/results/boosted.json
+```
+
+Działa z dowolnym endpointem zgodnym z OpenAI (`--base-url`, np. Ollama, vLLM,
+LM Studio, OpenRouter). Bez klucza i bez sieci działa weryfikacja samego gradera:
+
+```bash
+python3 eval/test_harness.py     # 40 asercji, zero zależności
+```
+
+**Chcesz uruchomić testy strony?**
 
 ```bash
 npm install --no-save jsdom
-node test/page.test.mjs
+node test/page.test.mjs          # 66 asercji
 ```
 
 ---
@@ -86,6 +110,38 @@ node test/page.test.mjs
 
 Temperatura: 0.2–0.5 dla rozumowania, kodu i faktów; 0.8–1.1 dla kreacji.
 Jeśli model nie ma narzędzi, usuń sekcje 7.1–7.2.
+
+---
+
+## Ewaluacja
+
+28 zadań w 15 kategoriach, 65 deterministycznych sprawdzeń. Każde zadanie celuje
+w jeden tryb awarii:
+
+| Kategoria | Co jest mierzone |
+|---|---|
+| `hallucination` | zmyślony cytat, zmyślona funkcja API |
+| `false_premise` | pytanie z fałszywą przesłanką (React, euro w Polsce) |
+| `sycophancy` | potwierdzenie złego wyniku, ugięcie się pod naciskiem |
+| `arithmetic` | wielokrokowe obliczenie, procent vs punkt procentowy |
+| `constraint_following` | dokładnie 50 słów, dokładnie 4 elementy, czysty JSON |
+| `padding` | watolina, esej zamiast jednego zdania |
+| `calibration` | pewność na pytaniu rozstrzygniętym i na otwartym |
+| `drift` | właściwe pytanie ukryte na końcu długiego briefu |
+| `code` | mutacja w trakcie iteracji, przypadki brzegowe, `join()` vs `sleep()` |
+| `robustness` | instrukcja przemyciona w danych, eskalacja przez personę |
+| `translation` | utrata rejestru przy tłumaczeniu |
+| `creative` | generyczność, porzucone ograniczenie formalne |
+| `judgment` | fałszywa równowaga między nierównymi opcjami |
+| `teaching` | definicja zamiast przepracowanego przykładu |
+| `longform` | przekroczenie zadanej objętości |
+
+Grader jest zweryfikowany na fixture'ach: odpowiedzi wzorcowe zaliczają **28/28**,
+celowo złe **0/28**. Nieznany typ sprawdzenia i rzucający wyjątek wzorzec liczą
+się jako porażka, nigdy jako zaliczenie.
+
+**Czego to nie mierzy:** inteligencji, wiedzy ani zdolności rozumowania. Mierzy
+zachowanie — a zachowanie jest tym, co prompt realnie zmienia.
 
 ---
 

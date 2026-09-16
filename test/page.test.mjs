@@ -284,6 +284,41 @@ check("stated count matches the built estimate within 2%",
   Math.abs(parseInt(claim.replace(/,/g, ""), 10) - est) / est < 0.02,
   `stated ~${claim} vs estimate ${est}`);
 
+console.log("\n— evaluation section —");
+const evalRows = doc ? document.querySelectorAll(".evaltable tr.tid, .evaltable td.tid") : [];
+const evalBox = document.getElementById("evalbox");
+check("eval section rendered", Boolean(evalBox));
+check("one table row per task",
+  document.querySelectorAll(".evaltable td.tid").length === 28,
+  `${document.querySelectorAll(".evaltable td.tid").length} rows`);
+check("one category header per category",
+  document.querySelectorAll(".evaltable tr.catrow").length === 15,
+  `${document.querySelectorAll(".evaltable tr.catrow").length} headers`);
+check("stated task count matches tasks.json",
+  evalBox.textContent.includes("28 zada\u0144"),
+  '"28 zada\u0144"');
+check("stated check count matches tasks.json",
+  evalBox.textContent.includes("65 deterministycznych"),
+  '"65 deterministycznych"');
+const evalCopy = evalBox.querySelector("[data-copy-code]");
+check("eval code block has a copy button", Boolean(evalCopy));
+evalCopy.click();
+await settle(20);
+check("eval copy button works", (clipboardLog.at(-1) || "").includes("harness.py"),
+  JSON.stringify((clipboardLog.at(-1) || "").slice(0, 40)));
+check("eval copy button is not double-wired", evalCopy.dataset.wired === "1");
+document.querySelector('.seg button[data-lang="pl"]').click();
+await settle(40);
+document.querySelector('.seg button[data-lang="en"]').click();
+await settle(40);
+const evalCopy2 = document.getElementById("evalbox").querySelector("[data-copy-code]");
+clipboardLog.length = 0;
+evalCopy2.click();
+evalCopy2.click();
+await settle(20);
+check("repeated renders do not stack listeners", clipboardLog.length === 2,
+  `${clipboardLog.length} writes for 2 clicks`);
+
 console.log("\n— final —");
 check("no uncaught JS errors after full interaction", errors.length === 0,
   errors.join("; ") || "clean");

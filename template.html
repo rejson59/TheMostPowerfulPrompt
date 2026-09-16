@@ -244,6 +244,32 @@
   .note.warn{border-color:rgba(251,191,36,.3);background:linear-gradient(180deg,rgba(251,191,36,.06),transparent)}
   .note.warn h3{color:var(--warn)}
 
+  .evalbox{
+    margin:0 0 40px;padding:22px;border-radius:var(--radius);
+    border:1px solid rgba(34,211,238,.24);
+    background:linear-gradient(180deg,rgba(34,211,238,.06),transparent 60%),var(--bg-card);
+  }
+  .evalhead h3{margin:0 0 10px;font-size:1.08rem;color:#fff}
+  .evalhead p{margin:0;font-size:.92rem;color:var(--fg-dim)}
+  .evalhead p strong{color:#fff}
+  .evalbox .codeblock{margin:16px 0 6px}
+  .evalbox details{margin-top:6px}
+  .evalbox summary{
+    cursor:pointer;font-size:.88rem;font-weight:600;color:var(--accent-2);
+    padding:10px 0;list-style:none;
+  }
+  .evalbox summary::-webkit-details-marker{display:none}
+  .evalbox summary::before{content:"▸ ";transition:.15s}
+  .evalbox details[open] summary::before{content:"▾ "}
+  .evaltable td.num,.evaltable th.num{text-align:right;width:70px}
+  .evaltable .tid{white-space:nowrap}
+  .evaltable .tid code{font-size:.76rem}
+  .evaltable tr.catrow td{
+    background:rgba(124,92,255,.09);font-family:var(--mono);font-size:.72rem;
+    letter-spacing:.12em;text-transform:uppercase;color:#b9a6ff;font-weight:600;padding:7px 14px;
+  }
+  .evaltable .cnt{color:var(--fg-mute);letter-spacing:0}
+
   .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:26px 0}
   .card{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-card)}
   .card h4{margin:0 0 8px;font-size:.95rem;color:#fff}
@@ -422,6 +448,37 @@
         narracyjnie opisywał wywołania, których nie potrafi wykonać.</p></div>
     </div>
 
+    <div class="evalbox" id="evalbox">
+      <div class="evalhead">
+        <h3>⚖ Ewaluacja — jak to zmierzyć zamiast wierzyć na słowo</h3>
+        <p>
+          @@EVAL_TASKS@@ zadań w @@EVAL_CATS@@ kategoriach, @@EVAL_CHECKS@@ deterministycznych
+          sprawdzeń. Każde zadanie celuje w jeden konkretny tryb awarii, który ten prompt
+          obiecuje usunąć. Uruchom model <strong>z promptem i bez</strong> i porównaj wyniki —
+          to jedyny uczciwy sposób, żeby sprawdzić, czy u Ciebie działa.
+        </p>
+      </div>
+      <div class="codeblock"><div class="codebar"><span>bash</span><button class="copy-mini" data-copy-code>Kopiuj</button></div><pre><code class="lang-bash"># 1. odpowiedzi BEZ promptu (bazowe)
+OMNI_API_KEY=sk-... python3 eval/harness.py run \
+  --model twoj-model --variant none --out eval/results/baseline.json
+
+# 2. te same zadania Z promptem
+OMNI_API_KEY=sk-... python3 eval/harness.py run \
+  --model twoj-model --variant full --out eval/results/boosted.json
+
+# 3. porównanie
+python3 eval/harness.py compare \
+  --baseline eval/results/baseline.json \
+  --boosted  eval/results/boosted.json
+
+# samo sprawdzenie gradera, bez API i bez sieci
+python3 eval/test_harness.py</code></pre></div>
+      <details>
+        <summary>Pokaż wszystkie @@EVAL_TASKS@@ zadań</summary>
+        @@EVAL_TABLE@@
+      </details>
+    </div>
+
     <div id="doc"></div>
   </article>
 </div>
@@ -559,7 +616,11 @@
   }
 
   function wireCodeCopy() {
-    docEl.querySelectorAll("[data-copy-code]").forEach(function (btn) {
+    // document-wide (the eval section lives outside docEl); the dataset flag
+    // stops repeated renders from stacking listeners on the same button
+    document.querySelectorAll("[data-copy-code]").forEach(function (btn) {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = "1";
       btn.addEventListener("click", function () {
         var code = btn.closest(".codeblock").querySelector("code");
         copy(code.textContent, btn);
