@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OMNICOGNITION — najpotężniejszy system prompt</title>
+<meta name="description" content="OMNICOGNITION 5.0 SINGULARITY — uniwersalny metapoznawczy system operacyjny dla modeli językowych. Pełny prompt do skopiowania, wersja EN i PL.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌬</text></svg>">
+<style>
+  :root{
+    --bg:#07080c;
+    --bg-soft:#0c0e15;
+    --bg-card:#11141d;
+    --bg-elev:#161a25;
+    --line:#232838;
+    --line-soft:#1b1f2b;
+    --fg:#e7eaf2;
+    --fg-dim:#9aa3b8;
+    --fg-mute:#6b7488;
+    --accent:#7c5cff;
+    --accent-2:#22d3ee;
+    --accent-3:#f472b6;
+    --ok:#34d399;
+    --warn:#fbbf24;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:96px}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:var(--sans);font-size:16px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  ::selection{background:rgba(124,92,255,.35)}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;padding:88px 24px 64px;text-align:center;
+    overflow:hidden;border-bottom:1px solid var(--line);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:-40% -10% auto -10%;height:520px;
+    background:
+      radial-gradient(600px 320px at 22% 40%,rgba(124,92,255,.28),transparent 70%),
+      radial-gradient(520px 300px at 78% 30%,rgba(34,211,238,.20),transparent 70%),
+      radial-gradient(460px 260px at 50% 80%,rgba(244,114,182,.14),transparent 70%);
+    filter:blur(8px);pointer-events:none;animation:drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift{to{transform:translate3d(0,-26px,0) scale(1.06)}}
+  .hero::after{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;
+    background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000,transparent);
+  }
+  .hero > *{position:relative;z-index:1}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-2);background:rgba(34,211,238,.07);
+    border:1px solid rgba(34,211,238,.22);border-radius:999px;padding:7px 15px;
+  }
+  .kicker .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  h1{
+    margin:0 auto 16px;max-width:15ch;
+    font-size:clamp(2.4rem,7vw,4.6rem);line-height:1.02;letter-spacing:-.035em;font-weight:800;
+    background:linear-gradient(120deg,#fff 8%,#c9bfff 42%,#7ce7f5 78%,#fff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lede{max-width:66ch;margin:0 auto 34px;color:var(--fg-dim);font-size:clamp(1rem,2.3vw,1.14rem)}
+  .lede strong{color:var(--fg);font-weight:600}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:1px;
+    max-width:760px;margin:0 auto 34px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  }
+  .stat{background:var(--bg-card);padding:16px 10px}
+  .stat b{display:block;font-size:1.45rem;font-weight:750;letter-spacing:-.02em;
+    background:linear-gradient(120deg,#fff,#a99cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat span{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--fg-mute)}
+
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{
+    appearance:none;cursor:pointer;font:inherit;font-weight:600;font-size:.94rem;
+    padding:13px 22px;border-radius:11px;border:1px solid var(--line);
+    background:var(--bg-elev);color:var(--fg);
+    display:inline-flex;align-items:center;gap:9px;transition:.18s;text-decoration:none;
+  }
+  .btn:hover{border-color:var(--accent);transform:translateY(-2px);background:#1b1f2e}
+  .btn.primary{
+    background:linear-gradient(120deg,var(--accent),#5b8bff);border-color:transparent;
+    box-shadow:0 8px 26px -10px rgba(124,92,255,.85);
+  }
+  .btn.primary:hover{box-shadow:0 12px 34px -10px rgba(124,92,255,1)}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn.done{background:linear-gradient(120deg,#059669,#34d399)!important;border-color:transparent!important}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgba(7,8,12,.86);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;padding:11px 20px;flex-wrap:wrap;
+  }
+  .seg{display:flex;background:var(--bg-card);border:1px solid var(--line);border-radius:9px;padding:3px}
+  .seg button{
+    appearance:none;border:0;background:transparent;color:var(--fg-dim);cursor:pointer;
+    font:inherit;font-size:.85rem;font-weight:600;padding:6px 15px;border-radius:7px;transition:.15s;
+  }
+  .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+  .search{flex:1;min-width:180px;position:relative}
+  .search input{
+    width:100%;font:inherit;font-size:.88rem;padding:9px 12px 9px 34px;border-radius:9px;
+    background:var(--bg-card);border:1px solid var(--line);color:var(--fg);outline:none;transition:.15s;
+  }
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.15)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--fg-mute)}
+  .search .count{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--fg-mute)}
+  .tbtn{
+    appearance:none;cursor:pointer;font:inherit;font-size:.83rem;font-weight:600;
+    padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:var(--bg-card);color:var(--fg-dim);transition:.15s;
+  }
+  .tbtn:hover{color:var(--fg);border-color:var(--accent)}
+  .tbtn.done{color:var(--ok);border-color:rgba(52,211,153,.45)}
+  mark{background:rgba(251,191,36,.28);color:#fde68a;border-radius:3px;padding:0 1px}
+
+  /* ---------- layout ---------- */
+  .shell{display:grid;grid-template-columns:274px minmax(0,1fr);gap:0;max-width:1360px;margin:0 auto}
+  aside{
+    position:sticky;top:63px;align-self:start;height:calc(100vh - 63px);overflow-y:auto;
+    padding:26px 16px 60px 22px;border-right:1px solid var(--line-soft);
+  }
+  aside h4{margin:0 0 12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--fg-mute)}
+  aside a{
+    display:block;color:var(--fg-dim);text-decoration:none;font-size:.845rem;line-height:1.45;
+    padding:5px 10px;border-radius:7px;border-left:2px solid transparent;transition:.13s;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  aside a:hover{color:var(--fg);background:var(--bg-card)}
+  aside a.l3{padding-left:24px;font-size:.795rem;color:var(--fg-mute)}
+  aside a.active{color:#fff;background:rgba(124,92,255,.13);border-left-color:var(--accent)}
+  aside .progress{position:sticky;top:-26px;margin:0 0 14px}
+  .bar{height:3px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .1s}
+
+  article{padding:34px 40px 120px;min-width:0;max-width:900px}
+
+  /* ---------- prose ---------- */
+  article h1{
+    font-size:clamp(1.75rem,4vw,2.5rem);max-width:none;margin:8px 0 20px;letter-spacing:-.03em;
+    background:none;color:var(--fg);
+  }
+  article h2{
+    font-size:1.36rem;margin:56px 0 18px;padding-top:20px;letter-spacing:-.02em;
+    border-top:1px solid var(--line-soft);position:relative;
+  }
+  article h2::before{
+    content:"";position:absolute;top:-1px;left:0;width:52px;height:2px;
+    background:linear-gradient(90deg,var(--accent),transparent);
+  }
+  article h3{font-size:1.06rem;margin:34px 0 12px;color:#cdd4e6;letter-spacing:-.01em}
+  article h4{font-size:.95rem;margin:24px 0 8px;color:var(--fg-dim)}
+  article p{margin:0 0 15px;color:#c8cfe0}
+  article p strong,article li strong{color:#fff}
+  article em{color:#b9c2d6}
+  article ul,article ol{margin:0 0 16px;padding-left:24px;color:#c8cfe0}
+  article li{margin-bottom:7px}
+  article li::marker{color:var(--accent)}
+  article hr{border:0;border-top:1px solid var(--line-soft);margin:34px 0}
+  article a{color:var(--accent-2)}
+
+  article blockquote{
+    margin:20px 0;padding:14px 18px;border-left:3px solid var(--accent);
+    background:linear-gradient(90deg,rgba(124,92,255,.09),transparent 80%);border-radius:0 10px 10px 0;
+  }
+  article blockquote p{margin:0 0 8px;color:#d5daea}
+  article blockquote p:last-child{margin:0}
+
+  article code{
+    font-family:var(--mono);font-size:.855em;background:rgba(124,92,255,.14);
+    color:#cdbcff;padding:2px 6px;border-radius:5px;border:1px solid rgba(124,92,255,.18);
+  }
+  .codeblock{margin:20px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#090b11}
+  .codebar{
+    display:flex;justify-content:space-between;align-items:center;padding:7px 12px;
+    background:var(--bg-elev);border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);
+  }
+  .copy-mini{
+    appearance:none;cursor:pointer;font:inherit;font-size:11px;font-weight:600;text-transform:none;letter-spacing:0;
+    background:transparent;border:1px solid var(--line);color:var(--fg-dim);border-radius:6px;padding:3px 10px;transition:.15s;
+  }
+  .copy-mini:hover{color:var(--fg);border-color:var(--accent)}
+  .copy-mini.done{color:var(--ok);border-color:rgba(52,211,153,.45)}
+  .codeblock pre{margin:0;padding:16px;overflow-x:auto}
+  .codeblock code{
+    background:none;border:0;padding:0;color:#a9e9f5;font-size:.82rem;line-height:1.62;white-space:pre;display:block;
+  }
+
+  .banner{
+    margin:34px 0;padding:11px 18px;text-align:center;border-radius:10px;
+    font-family:var(--mono);font-size:.82rem;letter-spacing:.13em;text-transform:uppercase;color:#9ee7f7;
+    background:linear-gradient(90deg,rgba(34,211,238,.1),rgba(124,92,255,.1),rgba(34,211,238,.1));
+    border:1px solid rgba(34,211,238,.22);
+  }
+
+  .tablewrap{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:.875rem;min-width:460px}
+  th{
+    text-align:left;padding:10px 14px;background:var(--bg-elev);color:var(--fg);
+    font-weight:650;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line);
+  }
+  td{padding:10px 14px;border-bottom:1px solid var(--line-soft);color:#c8cfe0;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:rgba(124,92,255,.05)}
+  td:first-child{color:#fff;font-weight:550;white-space:nowrap}
+
+  /* ---------- notes ---------- */
+  .note{
+    margin:0 0 26px;padding:18px 20px;border-radius:var(--radius);
+    border:1px solid var(--line);background:var(--bg-card);
+  }
+  .note h3{margin:0 0 10px;font-size:1rem;color:#fff;display:flex;align-items:center;gap:9px}
+  .note p{margin:0 0 10px;font-size:.92rem}
+  .note p:last-child{margin:0}
+  .note.warn{border-color:rgba(251,191,36,.3);background:linear-gradient(180deg,rgba(251,191,36,.06),transparent)}
+  .note.warn h3{color:var(--warn)}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:26px 0}
+  .card{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-card)}
+  .card h4{margin:0 0 8px;font-size:.95rem;color:#fff}
+  .card p{margin:0;font-size:.875rem;color:var(--fg-dim)}
+  .card .num{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.1em}
+
+  footer{
+    border-top:1px solid var(--line);padding:36px 24px 56px;text-align:center;
+    color:var(--fg-mute);font-size:.85rem;max-width:760px;margin:0 auto;
+  }
+  footer code{font-family:var(--mono);font-size:.8rem;color:var(--fg-dim)}
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translate(-50%,90px);opacity:0;
+    background:var(--bg-elev);border:1px solid var(--ok);color:var(--ok);
+    padding:11px 20px;border-radius:11px;font-size:.88rem;font-weight:600;z-index:99;
+    transition:.28s cubic-bezier(.2,.9,.3,1.4);pointer-events:none;box-shadow:0 12px 40px -12px #000;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1}
+
+  @media (max-width:960px){
+    .shell{grid-template-columns:1fr}
+    aside{display:none}
+    article{padding:26px 20px 90px}
+    .hero{padding:60px 18px 46px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker"><span class="dot"></span> OMNICOGNITION 5.0 · „SINGULARITY"</div>
+  <h1>Najpotężniejszy system prompt, jaki powstał</h1>
+  <p class="lede">
+    Uniwersalny <strong>metapoznawczy system operacyjny</strong> dla modeli językowych.
+    Siedmiofazowa pętla rozumowania, łańcuch weryfikacji, zapora antyhalucynacyjna,
+    kalibracja niepewności, protokoły inżynierskie i katalog osiemnastu trybów awarii
+    — wszystko w jednym dokumencie, gotowym do wklejenia.
+  </p>
+
+  <div class="stats">
+    <div class="stat"><b>@@TOTAL_WORDS@@</b><span>słów łącznie</span></div>
+    <div class="stat"><b>@@EN_TOKENS@@</b><span>tokenów (EN)</span></div>
+    <div class="stat"><b>@@TOTAL_SECTIONS@@</b><span>części</span></div>
+    <div class="stat"><b>@@TOTAL_CHARS@@</b><span>znaków</span></div>
+  </div>
+
+  <div class="cta">
+    <button class="btn primary" id="copyAll">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Kopiuj cały prompt
+    </button>
+    <button class="btn" id="dlMd">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      Pobierz .md
+    </button>
+    <button class="btn" id="dlTxt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h2"/></svg>
+      Pobierz .txt
+    </button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="seg" role="group" aria-label="Wersja językowa">
+    <button data-lang="en" aria-pressed="true">English <span style="opacity:.6">@@EN_WORDS@@</span></button>
+    <button data-lang="pl" aria-pressed="false">Polski <span style="opacity:.6">@@PL_WORDS@@</span></button>
+  </div>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" type="search" placeholder="Szukaj w prompcie…" autocomplete="off">
+    <span class="count" id="hits"></span>
+  </div>
+  <button class="tbtn" id="copyTop">Kopiuj</button>
+  <button class="tbtn" id="dlTop">Pobierz</button>
+</div>
+
+<div class="shell">
+  <aside>
+    <div class="progress"><div class="bar"><i id="barfill"></i></div></div>
+    <h4>Spis treści</h4>
+    <nav id="toc"></nav>
+  </aside>
+
+  <article>
+    <div class="note warn">
+      <h3>⚠ Uczciwa deklaracja — przeczytaj to przed wklejeniem</h3>
+      <p>
+        <strong>Żaden prompt nie podnosi inteligencji modelu 1000× i nie tworzy AGI.</strong>
+        Pojemność modelu jest ustalona w treningu; prompt nie dodaje wiedzy ani nie
+        przyspiesza obliczeń. Ktokolwiek twierdzi inaczej, sprzedaje Ci marketing.
+      </p>
+      <p>
+        Ten dokument robi coś innego i mierzalnego: eliminuje <em>niepotrzebne</em> błędy,
+        przez które nawet dobre modele wypadają głupio — halucynacje, pochlebstwo,
+        pompowanie objętości, przedwczesną zbieżność, łatanie objawów, dryf poza pytanie.
+        Wymusza jawne rozumowanie, samoweryfikację i kalibrację pewności.
+        <strong>Największy zysk jest na małych modelach</strong>, bo tam startowy pułap jest
+        najniższy — ale uwaga: małym modelom podawaj wariant <code>LITE</code> z Dodatku,
+        bo pełny dokument zje im budżet kontekstu potrzebny na samo zadanie.
+      </p>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><span class="num">01</span><h4>Gdzie wkleić</h4>
+        <p>Slot systemowy / developerski, jeśli model go ma. W przeciwnym razie pierwsza
+        wiadomość użytkownika, potem <code>---</code> i Twoje właściwe pytanie.</p></div>
+      <div class="card"><span class="num">02</span><h4>Jaki wariant</h4>
+        <p>Frontier → całość. Modele 7–30B → części 0, I, II, IV, VI, X. Modele ≤3B →
+        wyłącznie <code>LITE</code>. Więcej tekstu to nie zawsze lepiej.</p></div>
+      <div class="card"><span class="num">03</span><h4>Temperatura</h4>
+        <p>0.2–0.5 dla rozumowania, kodu i faktów. 0.8–1.1 dla kreacji. Ten prompt
+        zakłada tę pierwszą.</p></div>
+      <div class="card"><span class="num">04</span><h4>Bez narzędzi?</h4>
+        <p>Jeśli model nie ma dostępu do narzędzi, usuń sekcje 7.1–7.2 — inaczej będzie
+        narracyjnie opisywał wywołania, których nie potrafi wykonać.</p></div>
+    </div>
+
+    <div id="doc"></div>
+  </article>
+</div>
+
+<footer>
+  <p>
+    OMNICOGNITION 5.0 „SINGULARITY" · CC0 / domena publiczna — używaj, zmieniaj, sprzedawaj.
+    Pliki źródłowe: <code>prompt/EN.md</code>, <code>prompt/PL.md</code>, budowanie strony: <code>python3 build.py</code>
+  </p>
+</footer>
+
+<div class="toast" id="toast">Skopiowano do schowka</div>
+
+<script id="docs-data" type="application/json">@@DOCS@@</script>
+<script>
+(function () {
+  "use strict";
+
+  var DOCS = JSON.parse(document.getElementById("docs-data").textContent);
+  var byLang = {};
+  DOCS.forEach(function (d) { byLang[d.lang] = d; });
+
+  var current = "en";
+  var docEl = document.getElementById("doc");
+  var tocEl = document.getElementById("toc");
+  var toastEl = document.getElementById("toast");
+  var barfill = document.getElementById("barfill");
+
+  /* ---------- rendering ---------- */
+
+  function render() {
+    var d = byLang[current];
+    docEl.innerHTML = d.body;
+
+    // per-section copy buttons on every top-level heading
+    docEl.querySelectorAll("h2").forEach(function (h) {
+      var btn = document.createElement("button");
+      btn.className = "copy-mini";
+      btn.textContent = "Kopiuj część";
+      btn.style.cssText = "margin-left:12px;vertical-align:middle";
+      btn.addEventListener("click", function () {
+        copy(sectionText(h.id), btn);
+      });
+      h.appendChild(btn);
+    });
+    // table of contents
+    tocEl.innerHTML = d.toc.map(function (t) {
+      return '<a href="#' + t.id + '" class="l' + t.level + '" data-id="' + t.id +
+             '" title="' + t.text.replace(/"/g, "&quot;") + '">' + t.text + "</a>";
+    }).join("");
+
+    wireCodeCopy();
+    buildSpy();
+    if (document.getElementById("q").value.trim()) doSearch();
+  }
+
+  /* Raw markdown for one ## section. Boundaries come from build.py so the slugs
+     are guaranteed to match the rendered ids (JS \w is ASCII-only and would
+     mis-slug non-English headings). */
+  function sectionText(id) {
+    var text = byLang[current].sectionText[id];
+    if (typeof text === "string" && text) return text;
+    console.warn("OMNICOGNITION: no section mapped for id " + id);
+    return byLang[current].raw;
+  }
+
+  /* ---------- clipboard ---------- */
+
+  function copy(text, btn) {
+    var done = function () {
+      toast("Skopiowano " + text.length.toLocaleString("pl-PL") + " znaków");
+      if (!btn) return;
+      var old = btn.textContent;
+      btn.textContent = "✓ Skopiowano";
+      btn.classList.add("done");
+      setTimeout(function () { btn.textContent = old; btn.classList.remove("done"); }, 1700);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+    } else { fallback(text, done); }
+  }
+
+  function fallback(text, done) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); done(); }
+    catch (e) { toast("Nie udało się skopiować — zaznacz tekst ręcznie"); }
+    document.body.removeChild(ta);
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toastEl.classList.remove("show"); }, 2000);
+  }
+
+  function wireCodeCopy() {
+    docEl.querySelectorAll("[data-copy-code]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var code = btn.closest(".codeblock").querySelector("code");
+        copy(code.textContent, btn);
+      });
+    });
+  }
+
+  /* ---------- download ---------- */
+
+  function download(ext, mime) {
+    var d = byLang[current];
+    var blob = new Blob([d.raw], { type: mime + ";charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "OMNICOGNITION-5.0-" + current.toUpperCase() + "." + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast("Pobrano " + a.download);
+  }
+
+  /* ---------- search ---------- */
+
+  var qEl = document.getElementById("q");
+  var hitsEl = document.getElementById("hits");
+  var searchTimer;
+
+  function doSearch() {
+    var term = qEl.value.trim();
+    // strip previous marks
+    docEl.querySelectorAll("mark").forEach(function (m) {
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+    docEl.normalize();
+
+    if (term.length < 2) { hitsEl.textContent = ""; return; }
+
+    var re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    var walker = document.createTreeWalker(docEl, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentElement;
+        return p && p.closest("script,style") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], node;
+    while ((node = walker.nextNode())) nodes.push(node);
+
+    var hits = 0;
+    nodes.forEach(function (n) {
+      if (!re.test(n.nodeValue)) return;
+      re.lastIndex = 0;
+      var frag = document.createDocumentFragment(), last = 0, m;
+      while ((m = re.exec(n.nodeValue))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(n.nodeValue.slice(last, m.index)));
+        var mark = document.createElement("mark");
+        mark.textContent = m[0];
+        frag.appendChild(mark);
+        last = m.index + m[0].length;
+        hits++;
+      }
+      if (last < n.nodeValue.length) frag.appendChild(document.createTextNode(n.nodeValue.slice(last)));
+      n.parentNode.replaceChild(frag, n);
+    });
+
+    hitsEl.textContent = hits ? hits + " trafień" : "brak";
+    var first = docEl.querySelector("mark");
+    if (first) first.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  qEl.addEventListener("input", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 220);
+  });
+
+  /* ---------- scroll spy + progress ---------- */
+
+  var spy;
+  function buildSpy() {
+    if (spy) spy.disconnect();
+    var links = Array.prototype.slice.call(tocEl.querySelectorAll("a"));
+    var map = {};
+    links.forEach(function (a) { map[a.dataset.id] = a; });
+
+    spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.remove("active"); });
+        var link = map[e.target.id];
+        if (link) link.classList.add("active");
+      });
+    }, { rootMargin: "-80px 0px -72% 0px", threshold: 0 });
+
+    docEl.querySelectorAll("h2[id],h3[id]").forEach(function (h) { spy.observe(h); });
+  }
+
+  function onScroll() {
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    barfill.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- events ---------- */
+
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.dataset.lang === current) return;
+      document.querySelectorAll(".seg button").forEach(function (x) {
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+      current = b.dataset.lang;
+      document.documentElement.lang = current === "pl" ? "pl" : "en";
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  document.getElementById("copyAll").addEventListener("click", function () {
+    copy(byLang[current].raw, this);
+  });
+  document.getElementById("copyTop").addEventListener("click", function () {
+    copy(byLang[current].raw, this);
+  });
+  document.getElementById("dlMd").addEventListener("click", function () { download("md", "text/markdown"); });
+  document.getElementById("dlTxt").addEventListener("click", function () { download("txt", "text/plain"); });
+  document.getElementById("dlTop").addEventListener("click", function () { download("md", "text/markdown"); });
+
+  render();
+})();
+</script>
+</body>
+</html>
