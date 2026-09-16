@@ -224,6 +224,34 @@ def extract_sections(raw: str) -> dict[str, str]:
     return sections
 
 
+def extract_variants(raw: str) -> dict[str, str]:
+    """Pull the ready-to-paste variants out of the appendix code blocks.
+
+    Keyed by a stable name derived from the heading the block sits under, so the
+    page and the standalone .txt files stay in sync with one source of truth.
+    """
+    variants: dict[str, str] = {}
+    lines = raw.splitlines()
+    heading = ""
+    i = 0
+    while i < len(lines):
+        m = re.match(r"^#{2,3}\s+(.*)$", lines[i])
+        if m:
+            heading = m.group(1).strip()
+        if lines[i].lstrip().startswith("```"):
+            i += 1
+            buf: list[str] = []
+            while i < len(lines) and not lines[i].lstrip().startswith("```"):
+                buf.append(lines[i])
+                i += 1
+            name = "LITE" if "LITE" in heading.upper() or "SKRÓCON" in heading.upper() \
+                else "ONELINE" if "ONE-LINE" in heading.upper() or "JEDNOZDANIOW" in heading.upper() \
+                else slugify(heading)
+            variants[name] = "\n".join(buf).strip() + "\n"
+        i += 1
+    return variants
+
+
 def word_count(text: str) -> int:
     """Count words outside of code fences (a fairer measure of prose size)."""
     stripped = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
@@ -237,6 +265,8 @@ def token_estimate(text: str) -> int:
 
 def build_doc(entry: dict) -> dict:
     raw = entry["file"].read_text(encoding="utf-8")
+    # keep the size claim in the header honest and self-updating
+    raw = raw.replace("{{TOKENS}}", f"{token_estimate(raw):,}")
     body, toc = render_blocks(raw.splitlines())
     return {
         "lang": entry["lang"],
@@ -248,6 +278,7 @@ def build_doc(entry: dict) -> dict:
         "chars": len(raw),
         "tokens": token_estimate(raw),
         "sectionText": extract_sections(raw),
+        "variants": extract_variants(raw),
         "sections": len([t for t in toc if t["level"] == 2]),
     }
 
@@ -274,13 +305,21 @@ def main() -> None:
     for key, value in replacements.items():
         page = page.replace(key, value)
 
+    # standalone ready-to-paste variants, one file per variant
+    vdir = ROOT / "prompt" / "variants"
+    vdir.mkdir(parents=True, exist_ok=True)
+    for d in docs:
+        for name, text in d["variants"].items():
+            (vdir / f"{d['lang'].upper()}-{name}.txt").write_text(text, encoding="utf-8")
+
     OUT.write_text(page, encoding="utf-8")
     print(f"wrote {OUT} ({OUT.stat().st_size:,} bytes / {len(page):,} chars)")
     for d in docs:
         print(
             f"  {d['lang']}: {d['words']:,} words | {d['chars']:,} chars | "
             f"~{d['tokens']:,} tokens | {d['sections']} top-level sections | "
-            f"{len(d['toc'])} TOC entries"
+            f"{len(d['toc'])} TOC entries | "
+            f"variants: {', '.join(sorted(d['variants'])) or 'none'}"
         )
 
 

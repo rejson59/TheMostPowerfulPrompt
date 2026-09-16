@@ -84,6 +84,20 @@
     background:linear-gradient(120deg,#fff,#a99cff);-webkit-background-clip:text;background-clip:text;color:transparent}
   .stat span{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--fg-mute)}
 
+  .variants{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:760px;margin:0 auto 16px;
+  }
+  .vbtn{
+    appearance:none;cursor:pointer;font:inherit;text-align:left;
+    background:var(--bg-card);border:1px solid var(--line);border-radius:11px;
+    padding:10px 14px;color:var(--fg-dim);transition:.16s;min-width:158px;
+  }
+  .vbtn:hover{border-color:var(--accent);color:var(--fg);transform:translateY(-2px)}
+  .vbtn.done{border-color:var(--ok);color:var(--ok)}
+  .vbtn b{display:block;font-size:.86rem;color:#fff;font-weight:650}
+  .vbtn.done b{color:var(--ok)}
+  .vbtn span{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em}
+
   .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
   .btn{
     appearance:none;cursor:pointer;font:inherit;font-weight:600;font-size:.94rem;
@@ -250,11 +264,67 @@
   }
   .toast.show{transform:translate(-50%,0);opacity:1}
 
+  /* anchor links on headings */
+  .anchor{
+    opacity:0;margin-left:8px;color:var(--fg-mute);text-decoration:none;font-weight:400;
+    font-size:.85em;transition:.15s;
+  }
+  h2:hover .anchor,h3:hover .anchor{opacity:1}
+  .anchor:hover{color:var(--accent)}
+
+  /* mobile: TOC becomes a slide-in drawer instead of vanishing */
+  .scrim{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;opacity:0;
+    pointer-events:none;transition:.2s;backdrop-filter:blur(2px);
+  }
+  .scrim.open{opacity:1;pointer-events:auto}
+
   @media (max-width:960px){
     .shell{grid-template-columns:1fr}
-    aside{display:none}
+    aside{
+      display:block;position:fixed;top:0;left:0;bottom:0;height:100vh;width:min(300px,84vw);
+      z-index:70;background:var(--bg-soft);transform:translateX(-100%);
+      transition:transform .24s cubic-bezier(.3,.9,.3,1);box-shadow:0 0 60px rgba(0,0,0,.7);
+      padding-top:58px;
+    }
+    aside.open{transform:translateX(0)}
+    .toc-close{display:block}
     article{padding:26px 20px 90px}
     .hero{padding:60px 18px 46px}
+    .vbtn{min-width:0;flex:1 1 45%}
+    .search{order:3;flex-basis:100%}
+  }
+  @media (min-width:961px){
+    .toc-toggle{display:none}
+    .toc-close{display:none}
+    .scrim{display:none}
+  }
+  .toc-close{
+    position:absolute;top:14px;right:12px;appearance:none;cursor:pointer;
+    background:transparent;border:1px solid var(--line);color:var(--fg-dim);
+    border-radius:8px;width:32px;height:32px;font-size:16px;line-height:1;
+  }
+
+  /* print: TOC, toolbar and buttons are noise on paper */
+  @media print{
+    body{background:#fff;color:#000;font-size:11pt}
+    .toolbar,aside,.scrim,.hero::before,.hero::after,.vbtn,.cta,.anchor,
+    .copy-mini,.codebar button,.toc-toggle{display:none!important}
+    .shell{display:block;max-width:none}
+    .hero{padding:0 0 18px;border-bottom:1px solid #ccc}
+    h1{color:#000;background:none;-webkit-text-fill-color:#000;font-size:20pt}
+    .lede,.stat b{color:#333;background:none;-webkit-text-fill-color:#333}
+    .stats{border-color:#ccc}.stat{background:#f4f4f4}
+    article{padding:0;max-width:none}
+    article h2{break-after:avoid}
+    article p,article li{color:#111}
+    .note,.card{background:#f7f7f7;border-color:#ccc;break-inside:avoid}
+    .codeblock{break-inside:avoid;border-color:#ccc}
+    .codeblock code{color:#111}
+    .tablewrap{border-color:#ccc}
+    th{background:#eee;color:#000}
+    td,th{border-color:#ddd;color:#111}
+    a{color:#000;text-decoration:none}
   }
 </style>
 </head>
@@ -277,6 +347,8 @@
     <div class="stat"><b>@@TOTAL_CHARS@@</b><span>znaków</span></div>
   </div>
 
+  <div class="variants" id="variants"></div>
+
   <div class="cta">
     <button class="btn primary" id="copyAll">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -294,6 +366,7 @@
 </header>
 
 <div class="toolbar">
+  <button class="tbtn toc-toggle" id="tocToggle" aria-label="Spis treści" aria-expanded="false">☰ Spis</button>
   <div class="seg" role="group" aria-label="Wersja językowa">
     <button data-lang="en" aria-pressed="true">English <span style="opacity:.6">@@EN_WORDS@@</span></button>
     <button data-lang="pl" aria-pressed="false">Polski <span style="opacity:.6">@@PL_WORDS@@</span></button>
@@ -308,7 +381,8 @@
 </div>
 
 <div class="shell">
-  <aside>
+  <aside id="aside">
+    <button class="toc-close" id="tocClose" aria-label="Zamknij spis treści">✕</button>
     <div class="progress"><div class="bar"><i id="barfill"></i></div></div>
     <h4>Spis treści</h4>
     <nav id="toc"></nav>
@@ -359,6 +433,7 @@
   </p>
 </footer>
 
+<div class="scrim" id="scrim"></div>
 <div class="toast" id="toast">Skopiowano do schowka</div>
 
 <script id="docs-data" type="application/json">@@DOCS@@</script>
@@ -382,7 +457,7 @@
     var d = byLang[current];
     docEl.innerHTML = d.body;
 
-    // per-section copy buttons on every top-level heading
+    // per-section copy buttons + permalink anchors on every top-level heading
     docEl.querySelectorAll("h2").forEach(function (h) {
       var btn = document.createElement("button");
       btn.className = "copy-mini";
@@ -393,6 +468,18 @@
       });
       h.appendChild(btn);
     });
+
+    docEl.querySelectorAll("h2[id],h3[id]").forEach(function (h) {
+      var a = document.createElement("a");
+      a.className = "anchor";
+      a.href = "#" + h.id;
+      a.textContent = "#";
+      a.setAttribute("aria-label", "Link do sekcji " + h.id);
+      h.appendChild(a);
+    });
+
+    // ready-to-paste variants for the active language
+    renderVariants(d);
     // table of contents
     tocEl.innerHTML = d.toc.map(function (t) {
       return '<a href="#' + t.id + '" class="l' + t.level + '" data-id="' + t.id +
@@ -402,6 +489,29 @@
     wireCodeCopy();
     buildSpy();
     if (document.getElementById("q").value.trim()) doSearch();
+  }
+
+  /* Ready-to-paste variants (LITE / one-line) for the active language. */
+  var VARIANT_META = {
+    LITE: ["LITE", "małe modele ≤3B"],
+    ONELINE: ["Jedno zdanie", "maksymalna kompresja"],
+  };
+
+  function renderVariants(d) {
+    var host = document.getElementById("variants");
+    host.innerHTML = "";
+    Object.keys(d.variants).forEach(function (name) {
+      var meta = VARIANT_META[name] || [name, ""];
+      var text = d.variants[name];
+      var b = document.createElement("button");
+      b.className = "vbtn";
+      b.innerHTML = "<b></b><span></span>";
+      b.querySelector("b").textContent = meta[0];
+      b.querySelector("span").textContent =
+        meta[1] + " · " + text.length.toLocaleString("pl-PL") + " znaków";
+      b.addEventListener("click", function () { copy(text, b); });
+      host.appendChild(b);
+    });
   }
 
   /* Raw markdown for one ## section. Boundaries come from build.py so the slugs
@@ -569,6 +679,29 @@
       render();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
+  });
+
+  /* ---------- mobile TOC drawer ---------- */
+
+  var asideEl = document.getElementById("aside");
+  var scrimEl = document.getElementById("scrim");
+  var tocToggle = document.getElementById("tocToggle");
+
+  function setDrawer(open) {
+    asideEl.classList.toggle("open", open);
+    scrimEl.classList.toggle("open", open);
+    tocToggle.setAttribute("aria-expanded", String(open));
+  }
+  tocToggle.addEventListener("click", function () {
+    setDrawer(!asideEl.classList.contains("open"));
+  });
+  document.getElementById("tocClose").addEventListener("click", function () { setDrawer(false); });
+  scrimEl.addEventListener("click", function () { setDrawer(false); });
+  tocEl.addEventListener("click", function (e) {
+    if (e.target.tagName === "A") setDrawer(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setDrawer(false);
   });
 
   document.getElementById("copyAll").addEventListener("click", function () {

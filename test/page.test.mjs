@@ -20,6 +20,18 @@ const H2_COUNT = {
   en: (src.en.raw.match(/^##\s/gm) || []).length,
   pl: (src.pl.raw.match(/^##\s/gm) || []).length,
 };
+const H3_COUNT = {
+  en: (src.en.raw.match(/^###\s/gm) || []).length,
+  pl: (src.pl.raw.match(/^###\s/gm) || []).length,
+};
+const TABLE_COUNT = {
+  en: (src.en.raw.match(/^\|[-\s:|]+\|\s*$/gm) || []).length,
+  pl: (src.pl.raw.match(/^\|[-\s:|]+\|\s*$/gm) || []).length,
+};
+const FENCE_COUNT = {
+  en: (src.en.raw.match(/^```/gm) || []).length / 2,
+  pl: (src.pl.raw.match(/^```/gm) || []).length / 2,
+};
 
 let failures = 0;
 const check = (name, cond, detail = "") => {
@@ -120,23 +132,24 @@ check("sectionText map covers every PL heading",
 console.log("\n— initial render —");
 check("no uncaught JS errors", errors.length === 0, errors.join("; ") || "clean");
 check("document body rendered", doc.innerHTML.length > 20000, `${doc.innerHTML.length} chars`);
-check("top-level sections present", h2s().length === 15, `${h2s().length} h2`);
-check("subsections present", doc.querySelectorAll("h3").length === 44,
+check("top-level sections present", h2s().length === H2_COUNT.en, `${h2s().length} h2`);
+check("subsections present", doc.querySelectorAll("h3").length === H3_COUNT.en,
   `${doc.querySelectorAll("h3").length} h3`);
-check("tables rendered", doc.querySelectorAll("table").length === 4,
+check("tables rendered", doc.querySelectorAll("table").length === TABLE_COUNT.en,
   `${doc.querySelectorAll("table").length} tables`);
-check("code blocks rendered", doc.querySelectorAll(".codeblock").length === 2,
+check("code blocks rendered", doc.querySelectorAll(".codeblock").length === FENCE_COUNT.en,
   `${doc.querySelectorAll(".codeblock").length} blocks`);
 check("no raw markdown leaked into the DOM", !/(^|\n)#{2,4}\s/.test(doc.textContent));
 
 console.log("\n— table of contents —");
-const tocLinks = [...document.querySelectorAll("#toc a")];
-check("TOC built", tocLinks.length === 59, `${tocLinks.length} links`);
+const tocEl = document.getElementById("toc");
+const tocLinks = [...tocEl.querySelectorAll("a")];
+check("TOC built", tocLinks.length === H2_COUNT.en + H3_COUNT.en, `${tocLinks.length} links`);
 check("every TOC link resolves to a real id",
   tocLinks.every((a) => document.getElementById(a.getAttribute("href").slice(1))));
 check("scrollspy observer registered", observed.length === 1);
 check("scrollspy observes every heading",
-  observed[0] && observed[0].targets.length === 59,
+  observed[0] && observed[0].targets.length === H2_COUNT.en + H3_COUNT.en,
   `${observed[0]?.targets.length ?? 0} observed`);
 
 console.log("\n— per-section copy (EN) —");
@@ -192,8 +205,8 @@ document.querySelector('.seg button[data-lang="pl"]').click();
 await settle(60);
 check("PL content rendered", doc.textContent.includes("DYREKTYWA GŁÓWNA"));
 check("EN content gone", !doc.textContent.includes("PRIME DIRECTIVE"));
-check("PL sections rendered", h2s().length === 13, `${h2s().length} h2`);
-check("PL TOC rebuilt", document.querySelectorAll("#toc a").length === 57,
+check("PL sections rendered", h2s().length === H2_COUNT.pl, `${h2s().length} h2`);
+check("PL TOC rebuilt", document.querySelectorAll("#toc a").length === H2_COUNT.pl + H3_COUNT.pl,
   `${document.querySelectorAll("#toc a").length} links`);
 check("html lang updated", document.documentElement.lang === "pl");
 await assertAllSections("pl");
@@ -208,6 +221,68 @@ document.getElementById("dlTxt").click();
 check("download follows the switch back to EN", downloads.at(-1) === "OMNICOGNITION-5.0-EN.txt",
   downloads.at(-1));
 check("switching back restores EN content", doc.textContent.includes("PRIME DIRECTIVE"));
+
+console.log("\n— variant buttons —");
+const vbtns = [...document.querySelectorAll(".vbtn")];
+check("EN exposes both variants", vbtns.length === Object.keys(src.en.variants).length,
+  `${vbtns.length} buttons: ${Object.keys(src.en.variants).join(", ")}`);
+vbtns[0].click();
+await settle(20);
+check("LITE button copies the LITE variant",
+  clipboardLog.at(-1) === src.en.variants.LITE,
+  `${(clipboardLog.at(-1) || "").length} chars`);
+// A <=3B model typically has a 4k-8k context. The system prompt must leave the
+// bulk of that for the actual task, so LITE is budgeted at <500 tokens (~2000
+// chars) rather than some rounder number.
+check("LITE variant fits a small model's budget (<500 tokens)",
+  src.en.variants.LITE.length < 2000,
+  `${src.en.variants.LITE.length} chars ≈ ${Math.round(src.en.variants.LITE.length / 4)} tokens`);
+check("one-line variant really is one line",
+  src.en.variants.ONELINE.trim().split("\n").length === 1,
+  `${src.en.variants.ONELINE.trim().length} chars`);
+check("LITE variant is self-contained (has its own rules)",
+  /\n1[0-4]\./.test(src.en.variants.LITE), "numbered rules present");
+
+console.log("\n— permalink anchors —");
+const anchors = [...doc.querySelectorAll("h2[id] .anchor, h3[id] .anchor")];
+check("every heading has an anchor",
+  anchors.length === H2_COUNT.en + H3_COUNT.en, `${anchors.length} anchors`);
+check("anchors point at real ids",
+  anchors.every((a) => document.getElementById(a.getAttribute("href").slice(1))));
+
+console.log("\n— mobile TOC drawer —");
+const aside = document.getElementById("aside");
+const scrim = document.getElementById("scrim");
+const toggle = document.getElementById("tocToggle");
+check("drawer starts closed", !aside.classList.contains("open"));
+toggle.click();
+check("toggle opens the drawer",
+  aside.classList.contains("open") && scrim.classList.contains("open")
+  && toggle.getAttribute("aria-expanded") === "true");
+document.getElementById("tocClose").click();
+check("close button closes it", !aside.classList.contains("open") && !scrim.classList.contains("open"));
+toggle.click();
+scrim.click();
+check("clicking the scrim closes it", !aside.classList.contains("open"));
+toggle.click();
+document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape" }));
+check("Escape closes it", !aside.classList.contains("open"));
+toggle.click();
+// re-query: render() rebuilt the TOC after the language switches, so the
+// links captured at the start of this file are now detached from the DOM
+const freshLink = document.querySelector("#toc a");
+check("TOC link is attached to the live DOM",
+  Boolean(freshLink) && tocEl.contains(freshLink));
+freshLink.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+check("following a TOC link closes it", !aside.classList.contains("open"));
+
+console.log("\n— token claim stays honest —");
+const claim = (doc.textContent.match(/~([\d,]+) tokens/) || [])[1];
+check("header states a token count", Boolean(claim), `~${claim} tokens`);
+const est = Math.round(src.en.raw.length / 4.0);
+check("stated count matches the built estimate within 2%",
+  Math.abs(parseInt(claim.replace(/,/g, ""), 10) - est) / est < 0.02,
+  `stated ~${claim} vs estimate ${est}`);
 
 console.log("\n— final —");
 check("no uncaught JS errors after full interaction", errors.length === 0,

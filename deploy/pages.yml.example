@@ -1,0 +1,64 @@
+# GitHub Pages deployment for OMNICOGNITION.
+#
+# This file is NOT active where it sits. GitHub only runs workflows from
+# .github/workflows/, and the automation that pushed this repo does not hold
+# the `workflows` scope, so it cannot create that directory for you.
+#
+# To enable publishing, run this yourself in your own clone:
+#
+#   mkdir -p .github/workflows
+#   cp deploy/pages.yml.example .github/workflows/pages.yml
+#   git add .github/workflows/pages.yml && git commit -m 'Add Pages workflow'
+#   git push
+#
+# Then in the repo: Settings -> Pages -> Source: GitHub Actions.
+# The site will appear at https://rejson59.github.io/TheMostPowerfulPrompt/
+
+name: Deploy page to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Rebuild from the markdown sources so the published page can never drift
+      # from prompt/*.md, even if someone commits only a prompt edit.
+      - name: Rebuild index.html
+        run: python3 build.py
+
+      - name: Stage site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r prompt _site/prompt
+          cp README.md _site/
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

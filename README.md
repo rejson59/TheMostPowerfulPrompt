@@ -24,12 +24,14 @@ jest na małych modelach, bo tam startowy pułap jest najniższy.
 
 | Plik | Co to jest |
 |---|---|
-| `prompt/EN.md` | **Główny prompt.** ~6 660 słów, ~42,9 tys. znaków, ~10,7 tys. tokenów. Używaj tej wersji — modele najlepiej wykonują instrukcje po angielsku. |
-| `prompt/PL.md` | Pełny polski odpowiednik, ~3 990 słów. Dla rozmów prowadzonych po polsku. |
+| `prompt/EN.md` | **Główny prompt.** 9 580 słów, ~61,4 tys. znaków, ~15,3 tys. tokenów, 15 części. Używaj tej wersji — modele najlepiej wykonują instrukcje po angielsku. |
+| `prompt/PL.md` | Pełny polski odpowiednik, 6 013 słów, 15 części. Dla rozmów prowadzonych po polsku. |
+| `prompt/variants/` | Gotowe do wklejenia warianty `LITE` i jednozdaniowy, wyciągane automatycznie z dodatków. |
 | `index.html` | Samodzielna strona (zero zależności, działa offline) z podglądem, wyszukiwarką, spisem treści i kopiowaniem per sekcja. |
 | `build.py` | Buduje `index.html` z `prompt/*.md`. Własny renderer markdowna, bez bibliotek. |
 | `template.html` | Szablon strony (CSS + JS). |
-| `test/page.test.mjs` | 40 asercji wykonywanych na prawdziwej stronie w jsdom. |
+| `test/page.test.mjs` | 57 asercji wykonywanych na prawdziwej stronie w jsdom. |
+| `deploy/pages.yml.example` | Gotowy workflow GitHub Pages. **Nieaktywny tam, gdzie leży** — skopiuj go do `.github/workflows/pages.yml` we własnym klonie (szczegóły w nagłówku pliku). |
 
 ---
 
@@ -44,6 +46,19 @@ pełny dokument zje im budżet kontekstu potrzebny na samo zadanie.
 ```bash
 python3 -m http.server 8000     # albo po prostu otwórz index.html
 ```
+
+**Publikacja.** Workflow leży w `deploy/pages.yml.example` i nie jest aktywny —
+automatyzacja pushująca to repo nie ma uprawnienia `workflows`, więc nie może
+utworzyć `.github/workflows/`. Skopiuj plik samodzielnie:
+
+```bash
+mkdir -p .github/workflows
+cp deploy/pages.yml.example .github/workflows/pages.yml
+git add .github/workflows/pages.yml && git commit -m 'Add Pages workflow' && git push
+```
+
+Potem w repo: Settings → Pages → Source: **GitHub Actions**. Strona pojawi się pod
+`https://rejson59.github.io/TheMostPowerfulPrompt/`.
 
 **Chcesz edytować prompt i przebudować stronę?**
 
@@ -89,9 +104,17 @@ protokół debugowania, bezpieczeństwo, projektowanie
 **VII** — Narzędzia i zachowanie agentowe: pętla agentowa, dyscyplina kontekstu
 **VIII** — Bezpieczeństwo i integralność: kalibracja odmów, uczciwość pod presją
 **IX** — Metapoznanie: samomonitorowanie, odzyskiwanie po błędzie, pętla doskonalenia
-**X** — Katalog osiemnastu trybów awarii z poprawkami + brama końcowa
-**XI** — Aktywacja
-**Dodatki** — noty wdrożeniowe, wariant `LITE`, wariant jednozdaniowy
+**X** — Praca twórcza: pułapka generyczności, protokół rozbieżności, głos i rejestr,
+twarde ograniczenia formalne, przebieg redakcyjny, mechanika humoru
+**XI** — Wyjaśnianie i tłumaczenie: diagnoza realnej luki, drabina wyjaśniania,
+analogie z granicami, weryfikacja zrozumienia, zachowanie rejestru
+**XII** — Długie formy: struktura przed prozą, kontrakt akapitu, czteropoziomowa
+redakcja, dyscyplina objętości, anty-błoto
+**XIII** — Odporność adwersarzowa: granica zaufania, taksonomia ośmiu wstrzyknięć,
+samouzgadnianie, najsilniejsza wersja obu stron, red team na własnym wyjściu
+**XIV** — Katalog 28 trybów awarii z poprawkami + brama końcowa
+**XV** — Aktywacja
+**Dodatki** — noty wdrożeniowe, wariant `LITE` (14 reguł), wariant jednozdaniowy
 
 ---
 
